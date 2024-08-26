@@ -1,0 +1,114 @@
+canvas,
+svg {
+  max-width: 100%;
+  width: 100vw;
+  background-color: rgb(100, 100, 100);
+  background-color: #E5E5E5;
+  background-color: #000000;
+  stroke: none !important;
+} 
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+.foreign{
+  background: white;
+   stroke: none !important;
+  /*overflow: scroll;*/
+}
+.foreign *{
+  user-select: none;
+}
+.foreign *:hover{
+  border: 1px solid #007fff;
+}
+.canvas {
+  background-color: rgba(0, 0, 0, 0);
+}
+.none {
+  display: none;
+}
+.color-display {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid white;
+  max-width: 100%;
+  margin: 10px;
+  font-size: 20px;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  width: 300px;
+  letter-spacing: 2px;
+}
+.ini {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+path {
+  border-radius: 10px dotted green;
+  stroke-miterlimit: thick;
+}
+.fill {
+  fill: #00000000;
+}
+.stroke{
+  /*stroke:#434343;*/
+ stroke: #2572B8;
+ /*stroke:#007fff;*/
+}
+.cloneblue{
+  stroke:#007fff;
+}
+.highlightblue{
+  stroke:#557fff;
+}
+
+.draw-text{
+  font-size: .9vw;
+  cursor: default;
+   user-select: none;
+}
+.red{
+  stroke:red;
+}
+#tx2{
+  stroke: #2572B8;
+}
+.fixed-input{
+  position: fixed;
+  top: 100px;
+  right: 0px;
+  width: 0px;
+  height: 0px;
+  opacity: 0;
+  
+}
+
+@media screen  and (max-width:1050px) {
+  .draw-text{
+  font-size: 1.2vw;
+}}
+
+@media screen  and (max-width:900px) {
+  .draw-text{
+  font-size: 1.5vw;
+}
+}
+@media screen  and (max-width:700px) {
+  .draw-text{
+  font-size: 2vw;
+}
+}
+
+@media screen  and (max-width:450px) {
+  .draw-text{
+  font-size: 2.7vw;
+}
+}
+
+@media screen  and (max-width:300px) {
+  .draw-text{
+  font-size: 3.7vw;
+}
+}
