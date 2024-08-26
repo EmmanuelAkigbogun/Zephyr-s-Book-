@@ -1,0 +1,139 @@
+import { useContext, useEffect, useRef, useState } from "react";
+import { Context } from "./Draw";
+import Dimension from "./Dimension";
+function Rect() {
+    let context=useContext(Context)
+    let targetObject=context.targetObject
+    let bBoxColor = context.bBoxColor;
+    let editdrag=context.editdrag
+    let circlerad = context.circlerad;
+    /*
+    let ref=useRef(null)
+    let [l,ll]=useState(0)
+        let [j, jj] = useState(0);
+                let [r, rr] = useState(0);
+    useEffect(()=>{
+        console.log(ref?.current?.getBBox());
+         console.log(ref?.current?.getTotalLength()*(2.5/4));
+               rr((r = ref?.current?.getBBox()));
+         ll((l = ref?.current?.getTotalLength() * ((r?.width+r?.height+r?.width/2) / (2*r?.width+2*r?.height))));
+                  jj((j = ref?.current?.getPointAtLength(l)));
+        
+    },[context])
+    */
+  return (!editdrag.current)&&Object.keys(targetObject.current).map((e) => {
+    let x1 = Object.keys(targetObject.current).map(
+      (e) => targetObject.current[e][1]
+    );
+    x1 = Math.min(...x1);
+    let x2 = Object.keys(targetObject.current).map(
+        (e) => targetObject.current[e][5]
+      );
+    x2=Math.max(...x2);
+    let y1 = Object.keys(targetObject.current).map(
+            (e) => targetObject.current[e][2]
+          );
+     y1 = Math.min(...y1);
+    let y2 = Object.keys(targetObject.current).map(
+            (e) => targetObject.current[e][6]
+          );
+    y2 = Math.max(...y2);
+
+    console.log(Math.min(...x1));
+    return (
+      <g stroke={bBoxColor.current} fill="none" key={`${e}g`}>
+        <rect
+          x={targetObject.current[e][1]}
+          y={targetObject.current[e][2]}
+          width={targetObject.current[e][3]}
+          height={targetObject.current[e][4]}
+          strokeWidth={`.2%`}
+          key={`${e}r`}
+          className="ini"
+          name="rectart$"
+        />
+        <Dimension e={e} />
+        <circle
+          cx={targetObject.current[e][1]}
+          cy={targetObject.current[e][2]}
+          r={circlerad.current[0]}
+          strokeWidth={circlerad.current[1]}
+          fill="white"
+          key={`${e}c1`}
+          name="rectcirart$"
+        />
+        <circle
+          cx={targetObject.current[e][5]}
+          cy={targetObject.current[e][2]}
+          r={circlerad.current[0]}
+          strokeWidth={circlerad.current[1]}
+          fill="white"
+          key={`${e}c2`}
+          name="rectcirart$"
+        />
+        <circle
+          cx={targetObject.current[e][5]}
+          cy={targetObject.current[e][6]}
+          r={circlerad.current[0]}
+          strokeWidth={circlerad.current[1]}
+          fill="white"
+          key={`${e}c3`}
+          name="rectcirart$"
+        />
+        <circle
+          cx={targetObject.current[e][1]}
+          cy={targetObject.current[e][6]}
+          r={circlerad.current[0]}
+          strokeWidth={circlerad.current[1]}
+          fill="white"
+          key={`${e}c4`}
+          name="rectcirart$"
+        />
+      </g>
+    );
+  });
+}
+export default Rect;
+
+
+        else if (polyelip.current[0]) {
+          polyelip.current[2] = `POLYGON:${valx + valw / 2} ${valy + valh / 2} ${valw / 2} ${valh / 2}`;
+          setRender((r) => r + 1);
+          let polynumber=0
+          let polyguy=``
+          const currentguy=Array.from(polyelip.current)[3].current
+          let increment= (currentguy.getTotalLength() /Number(polyelip.current[1]))
+                     for (
+                       let index = 0;
+                       index < 2;
+                       index++
+                     ) {
+                         try {
+                           polyguy += `POLYGON:M${
+                             currentguy.getPointAtLength(polynumber).x
+                           } ${currentguy?.getPointAtLength(polynumber).y}`;
+                         } catch (e) {}
+               
+                       polynumber += increment;
+                     }
+        
+
+            for (let index = 0; index < polyelip.current[1]+1; index++) {
+                if (index === 0) {
+            try{
+                  polyguy += `POLYGON:M${currentguy.getPointAtLength(polynumber).x} ${currentguy?.getPointAtLength(polynumber).y}`;
+              }
+             catch(e){}
+                } else {
+                 try{
+                  polyguy += ` ${currentguy.getPointAtLength(polynumber).x} ${currentguy?.getPointAtLength(polynumber).y}`;
+                }
+                catch(e){}
+                }
+            polynumber += increment;
+              }
+        
+                vgpath.current.splice(indexvalue, 1, polyguy);
+                
+              
+        }

@@ -1,0 +1,1105 @@
+import { useContext, useEffect } from "react";
+import { Context } from "./Draw";
+import { keydownfx } from "./Download";
+import { up } from "./Functions/Mouse";
+import { promptfx } from "./Download";
+function WindowFx() {
+  let context = useContext(Context);
+  let cwidth = context.cwidth;
+  let cheight = context.cheight;
+  let setRender = context.setRender;
+  let hovercolor = context.hovercolor;
+  let canvas = context.canvas;
+  let link = context.link;
+  let vg = context.vg;
+  let edit = context.edit;
+  let target = context.target;
+  let vgcolor = context.vgcolor;
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let targetObject = context.targetObject;
+  let thick = context.thick;
+  let bBoxColor = context.bBoxColor;
+  let vx = context.vx;
+  let vy = context.vy;
+  let editdrag = context.editdrag;
+  let dragx = context.dragx;
+  let dragy = context.dragy;
+  let dragd = context.dragd;
+  let draga = context.draga;
+  let ctx = context.ctx;
+  let dragbool = context.dragbool;
+  let dragrect = context.dragrect;
+  let drag = context.drag;
+  useEffect(() => {
+    window.onresize = (e) => {
+      //console.log(e);
+      cwidth.current = window.innerWidth;
+      cheight.current = window.innerHeight;
+      setRender((r) => r + 1);
+    };
+    window.onkeydown = (e) => {
+      if (e.ctrlKey) {
+      } else {
+        vgpathxy.current = {};
+        if (
+          e.key === "Delete" &&
+          Object.values(targetObject.current).length > 0
+        ) {
+          Object.values(targetObject.current)
+            .reverse()
+            .map((m) => {
+              keydownfx(e, context, m[7]);
+            });
+          targetObject.current = {};
+        } else {
+          // edit draw download
+          keydownfx(e, context, "m");
+        }
+      }
+    };
+    window.onpointerdown = (e) => {
+      console.log(
+        e.clientX,
+        e.clientY,
+        e.clientX >= dragrect.current[0] &&
+          e.clientX <= dragrect.current[1] &&
+          e.clientY >= dragrect.current[2] &&
+          e.clientY <= dragrect.current[3]
+      );
+
+      //   e.preventDefault()
+
+      if (edit.current && hovercolor.current >= 0) {
+        if (!e.target.getAttribute("name")?.includes("art$")) {
+          target.current = [];
+          dragd.current = [];
+          draga.current = [];
+          let ObjectData = targetObject.current;
+          dragbool.current = false;
+          if (!e.ctrlKey) {
+            targetObject.current = {};
+            dragd.current = [];
+            draga.current = [];
+          }
+
+          target.current.push(
+            Array.from(vg.current.children).filter(
+              (e) => !e.getAttribute("name")?.includes("art$")
+            )[hovercolor.current]
+          );
+          target.current.push(target.current[0].getBBox().x - 2);
+          target.current.push(target.current[0].getBBox().y - 2);
+          target.current.push(target.current[0].getBBox().width + 4);
+          target.current.push(target.current[0].getBBox().height + 4);
+          target.current.push(target.current[1] + target.current[3]);
+          target.current.push(target.current[2] + target.current[4]);
+          target.current.push(hovercolor.current);
+          target.current[0].setAttribute(
+            "stroke",
+            vgcolor.current[hovercolor.current]
+          );
+          /*
+          Object.values(ObjectData).filter((e) => e[0] === target.current[0])
+            .length
+            ? delete targetObject.current[hovercolor.current]
+            : (targetObject.current[hovercolor.current] = target.current);
+            */
+          targetObject.current[hovercolor.current] = target.current;
+          if (
+            e.clientX >= dragrect.current[0] &&
+            e.clientX <= dragrect.current[1] &&
+            e.clientY >= dragrect.current[2] &&
+            e.clientY <= dragrect.current[3]
+          ) {
+            drag.current = true;
+          } else {
+            drag.current = false;
+          }
+          setRender((r) => r + 1);
+        }
+      } else {
+        if (
+          e.clientX >= dragrect.current[0] &&
+          e.clientX <= dragrect.current[1] &&
+          e.clientY >= dragrect.current[2] &&
+          e.clientY <= dragrect.current[3]
+        ) {
+          drag.current = true;
+        } else {
+          drag.current = false;
+        }
+        if (!e.ctrlKey) {
+          dragbool.current = true;
+          dragd.current = [];
+          draga.current = [];
+        } else {
+          dragbool.current = true;
+        }
+      }
+      if (Object.keys(targetObject.current).length > 0) {
+        dragx.current =
+          (e.clientX - vg.current.getBoundingClientRect().x) *
+            (cwidth.current / vg.current.clientWidth) +
+          vx.current;
+        dragy.current =
+          (e.clientY - vg.current.getBoundingClientRect().y) *
+            (cheight.current / vg.current.clientHeight) +
+          vy.current;
+
+        Object.keys(targetObject.current).map((e) => {
+          if (targetObject.current[e][0].localName == "path") {
+            dragd.current.push(
+              targetObject.current[e][0]
+                .getAttribute("d")
+                .replace(/[A-L]|[N-Z]/g, " $&")
+                .replace(/[A-Z]/g, "")
+                .split(" ")
+            );
+            draga.current.push(
+              targetObject.current[e][0]
+                .getAttribute("d")
+                .replace(/[A-L]|[N-Z]/g, " $&")
+                .replace(/(\.*|-)\d/g, "")
+                .split(" ")
+            );
+          } else if (targetObject.current[e][0].localName == "rect") {
+            dragd.current.push([
+              targetObject.current[e][0].getAttribute("x"),
+              targetObject.current[e][0].getAttribute("y"),
+            ]);
+
+            draga.current.push([``, ``]);
+          } else if (targetObject.current[e][0].localName == "circle") {
+            dragd.current.push([
+              targetObject.current[e][0].getAttribute("cx"),
+              targetObject.current[e][0].getAttribute("cy"),
+            ]);
+
+            draga.current.push([``, ``]);
+          }
+        });
+
+        editdrag.current = true;
+      }
+      console.log(drag.current);
+    };
+    window.onpointermove = (e) => {
+      if (
+        drag.current &&
+        editdrag.current &&
+        Object.keys(targetObject.current).length > 0
+      ) {
+        dragbool.current = false;
+        let x =
+          (e.clientX - vg.current.getBoundingClientRect().x) *
+            (cwidth.current / vg.current.clientWidth) +
+          vx.current;
+        let y =
+          (e.clientY - vg.current.getBoundingClientRect().y) *
+            (cheight.current / vg.current.clientHeight) +
+          vy.current;
+
+        Object.keys(targetObject.current).map((a, i) => {
+          let lo = [];
+          for (let index = 0; index < dragd.current[i].length; index++) {
+            if (index % 2 == 0) {
+              lo.push(
+                draga.current[i][index] +
+                  (dragd.current[i][index] !== ""
+                    ? +dragd.current[i][index] - dragx.current + x
+                    : "")
+              );
+            } else {
+              lo.push(
+                draga.current[i][index] +
+                  (dragd.current[i][index] !== ""
+                    ? +dragd.current[i][index] - dragy.current + y
+                    : "")
+              );
+            }
+          }
+
+          if (targetObject.current[a][0].localName == "path") {
+            targetObject.current[a][0].setAttribute(
+              "d",
+              lo
+                .map((m) => m)
+                .join(" ")
+                .replace(/ (?=[A-L]|[N-Z])/g, "")
+            );
+          } else if (targetObject.current[a][0].localName == "rect") {
+            targetObject.current[a][0].setAttribute("x", lo.map((m) => m)[0]);
+            targetObject.current[e][0].setAttribute("y", lo.map((m) => m)[1]);
+          } else if (targetObject.current[a][0].localName == "circle") {
+            targetObject.current[a][0].setAttribute("cx", lo.map((m) => m)[0]);
+            targetObject.current[a][0].setAttribute("cy", lo.map((m) => m)[1]);
+          }
+        });
+        editdrag.current = true;
+        setRender((r) => r + 1);
+      }
+    };
+    window.onpointerup = (e) => {
+      drag.current = false;
+      if (editdrag.current) {
+        editdrag.current = false;
+        Object.keys(targetObject.current).map((e) => {
+          targetObject.current[e][1] =
+            targetObject.current[e][0].getBBox().x - 2;
+          targetObject.current[e][2] =
+            targetObject.current[e][0].getBBox().y - 2;
+          targetObject.current[e][3] =
+            targetObject.current[e][0].getBBox().width + 4;
+          targetObject.current[e][4] =
+            targetObject.current[e][0].getBBox().height + 4;
+          targetObject.current[e][5] =
+            targetObject.current[e][1] + targetObject.current[e][3];
+          targetObject.current[e][6] =
+            targetObject.current[e][2] + targetObject.current[e][4];
+        });
+        if (dragbool.current) {
+          targetObject.current = {};
+        }
+        setRender((r) => r + 1);
+      }
+    };
+    window.onpointerover = (e) => {
+      if (!e.target.getAttribute("name")?.includes("art$")) {
+        hovercolor.current = Array.from(vg.current.children)
+          .filter((e) => !e.getAttribute("name")?.includes("art$"))
+          .map((m, i) => {
+            if (e.target === m) {
+              return i;
+            }
+          })
+          .filter((e) => e !== undefined)[0];
+        edit.current && e.target.setAttribute("stroke", bBoxColor.current);
+        edit.current && e.target.setAttribute("class", "fill");
+        edit.current &&
+          e.target.setAttribute("stroke-width", thick.current + 2);
+      }
+    };
+    window.onwheel = (e) => {
+      vx.current = vx.current + e.deltaX;
+      vy.current = vy.current + e.deltaY;
+      setRender((r) => r + 1);
+    };
+
+    window.onpointerout = (e) => {
+      if (!e.target.getAttribute("name")?.includes("art$")) {
+        //&& e.target !== target.current[0]
+        edit.current &&
+          e.target.setAttribute("stroke", vgcolor.current[hovercolor.current]);
+        e.target.setAttribute("class", "");
+        edit.current && e.target.setAttribute("stroke-width", thick.current);
+        hovercolor.current = -1;
+      }
+    };
+    //https://www.reddit.com/r/bestsquirt/comments/1880sn2/sexy_ebony_baddie_queen_tahshaar_makes_a_big_wet/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+  }, []);
+
+  return <></>;
+}
+export default WindowFx;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { useContext, useEffect } from "react";
+import { Context } from "./Draw";
+import { keydownfx } from "./Download";
+import { up } from "./Functions/Mouse";
+import { promptfx } from "./Download";
+function WindowFx() {
+  let context = useContext(Context);
+  let cwidth = context.cwidth;
+  let cheight = context.cheight;
+  let setRender = context.setRender;
+  let hovercolor = context.hovercolor;
+  let canvas = context.canvas;
+  let link = context.link;
+  let vg = context.vg;
+  let edit = context.edit;
+  let target = context.target;
+  let straightcolor = context.straightcolor;
+  let vgcolor = context.vgcolor;
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let targetObject = context.targetObject;
+  let thick = context.thick;
+  let bBoxColor = context.bBoxColor;
+  let vx = context.vx;
+  let vy = context.vy;
+  let editdrag = context.editdrag;
+  let dragx = context.dragx;
+  let dragy = context.dragy;
+  let dragd = context.dragd;
+  let draga = context.draga;
+  let ctx = context.ctx;
+  let dragbool = context.dragbool;
+  let dragrect = context.dragrect;
+  let drag = context.drag;
+  let pick = context.pick;
+  let highlight = context.highlight;
+  let movepen = context.movepen;
+  let downconst = context.downconst;
+  let alignedline = context.alignedline;
+  let pencirclearr = context.pencirclearr;
+  let pen = context.pen;
+  let gendragorclick = context.gendragorclick;
+  let shapes = context.shapes;
+  let shapebool = context.shapebool;
+  let rbox = context.rbox;
+  let circle = context.circle;
+  let ellipse = context.ellipse;
+  let polyelip=context.polyelip
+  let shapedown=context.shapedown
+  useEffect(() => {
+    window.onresize = (e) => {
+      //console.log(e);
+      cwidth.current = window.innerWidth;
+      cheight.current = window.innerHeight;
+      setRender((r) => r + 1);
+    };
+    window.onkeydown = (e) => {
+      let hovervalue=null;
+      if (e.ctrlKey) {
+      } else {
+        vgpathxy.current = {};
+        if (
+          e.key === "Delete" &&
+          Object.values(targetObject.current).length > 0
+        ) {
+          if (hovercolor.current===-1) {
+          }
+          else{
+             hovervalue = Array.from(vg.current.children)[hovercolor.current];
+          }
+          Object.values(targetObject.current)
+            .reverse()
+            .map((m) => {
+              keydownfx(e, context, m[7]);
+            });
+            if(hovervalue!==null){
+              hovercolor.current = Array.from(vg.current.children)
+              .filter((f) => !f.getAttribute("name")?.includes("art$"))
+              .map((m, i) => {
+                if (hovervalue === m) {
+                  return i;
+                }
+              })
+              .filter((e) => e !== undefined)[0];
+                       setRender((r) => r + 1);
+            }
+            else{
+              hovercolor.current=-1; 
+              setRender((r) => r + 1);
+            }
+          targetObject.current = {};
+        } else {
+          // edit draw download
+          keydownfx(e, context, "m");
+        }
+      }
+    };
+    window.onpointerdown = (e) => {
+      let dataX =
+        (e.clientX - vg.current.getBoundingClientRect().x) *
+          (cwidth.current / vg.current.clientWidth) +
+        vx.current;
+      let dataY =
+        (e.clientY - vg.current.getBoundingClientRect().y) *
+          (cheight.current / vg.current.clientHeight) +
+        vy.current;
+      if (!edit.current && shapes.current) {
+        pick.current = [];
+        drag.current = false;
+        highlight.current = false;
+        pick.current.push(dataX, dataY);
+        shapebool.current = true;
+        shapedown.current = true;
+        /*
+         if (polyelip.current[0]) {
+         vgpath.current.push(`POLYGON:M${dataX} ${dataY}`);
+          vgcolor.current.push(`white`);
+          straightcolor.current.push(`white`);
+          polyelip.current.splice(2, 1,`POLYGON:${dataX} ${dataY} ${0} ${0}`);
+        }
+        */
+        setRender((r) => r + 1);
+      }
+      if (edit.current && hovercolor.current >= 0) {
+        if (!e.target.getAttribute("name")?.includes("art$")) {
+          target.current = [];
+          dragd.current = [];
+          draga.current = [];
+          gendragorclick.current = false;
+          let ObjectData = targetObject.current;
+          dragbool.current = false;
+          if (!e.ctrlKey) {
+            targetObject.current = {};
+            dragd.current = [];
+            draga.current = [];
+          }
+
+          target.current.push(
+            Array.from(vg.current.children).filter(
+              (e) => !e.getAttribute("name")?.includes("art$")
+            )[hovercolor.current]
+          );
+          target.current.push(target.current[0].getBBox().x);
+          target.current.push(target.current[0].getBBox().y);
+          target.current.push(target.current[0].getBBox().width);
+          target.current.push(target.current[0].getBBox().height);
+          target.current.push(target.current[1] + target.current[3]);
+          target.current.push(target.current[2] + target.current[4]);
+          target.current.push(hovercolor.current);
+          target.current[0].setAttribute(
+            "stroke",
+            vgcolor.current[hovercolor.current]
+          );
+          ///*
+          Object.values(ObjectData).filter((e) => e[0] === target.current[0])
+            .length
+            ? e.ctrlKey
+              ? delete targetObject.current[hovercolor.current] //in obj del on cntrl
+              : (gendragorclick.current = true) //in obj new or drag
+            : (targetObject.current[hovercolor.current] = target.current); //not in obj
+          //*/
+          if (gendragorclick.current) {
+            targetObject.current = ObjectData;
+            targetObject.current[hovercolor.current] = target.current;
+          }
+          // targetObject.current[hovercolor.current] = target.current;
+          if (
+            dataX >= dragrect.current[0] &&
+            dataX <= dragrect.current[1] &&
+            dataY >= dragrect.current[2] &&
+            dataY <= dragrect.current[3]
+          ) {
+            drag.current = true;
+          } else {
+            drag.current = false;
+          }
+          setRender((r) => r + 1);
+        }
+      } else {
+        if (edit.current) {
+          if (
+            dataX >= dragrect.current[0] &&
+            dataX <= dragrect.current[1] &&
+            dataY >= dragrect.current[2] &&
+            dataY <= dragrect.current[3]
+          ) {
+            drag.current = true;
+            highlight.current = false;
+          } else {
+            pick.current = [];
+            drag.current = false;
+            highlight.current = true;
+            pick.current.push(dataX, dataY);
+          }
+          if (!e.ctrlKey) {
+            dragbool.current = true;
+            dragd.current = [];
+            draga.current = [];
+          } else {
+            dragbool.current = true;
+          }
+        }
+      }
+      if (Object.keys(targetObject.current).length > 0 && edit.current) {
+        dragx.current = dataX;
+        dragy.current = dataY;
+
+        Object.keys(targetObject.current).map((e) => {
+          if (targetObject.current[e][0].localName == "path") {
+            dragd.current.push(
+              targetObject.current[e][0]
+                .getAttribute("d")
+                .replace(/[A-L]|[N-Z]/g, " $&")
+                .replace(/[A-Z]/g, "")
+                .split(" ")
+            );
+            draga.current.push(
+              targetObject.current[e][0]
+                .getAttribute("d")
+                .replace(/[A-L]|[N-Z]/g, " $&")
+                .replace(/(\.*|-)\d/g, "")
+                .split(" ")
+            );
+          } 
+          else if (targetObject.current[e][0].localName == "rect") {
+            dragd.current.push([
+              targetObject.current[e][0].getAttribute("x"),
+              targetObject.current[e][0].getAttribute("y"),
+            ]);
+
+            draga.current.push([``, ``]);
+          } else if (targetObject.current[e][0].localName == "circle") {
+            dragd.current.push([
+              targetObject.current[e][0].getAttribute("cx"),
+              targetObject.current[e][0].getAttribute("cy"),
+            ]);
+
+            draga.current.push([``, ``]);
+          } else if (targetObject.current[e][0].localName == "ellipse") {
+            dragd.current.push([
+              targetObject.current[e][0].getAttribute("cx"),
+              targetObject.current[e][0].getAttribute("cy"),
+            ]);
+
+            draga.current.push([``, ``]);
+          } else if (targetObject.current[e][0].localName == "line") {
+            dragd.current.push([
+              targetObject.current[e][0].getAttribute("x1"),
+              targetObject.current[e][0].getAttribute("y1"),
+              targetObject.current[e][0].getAttribute("x2"),
+              targetObject.current[e][0].getAttribute("y2"),
+            ]);
+
+            draga.current.push([``, ``, ``, ``]);
+          }
+        });
+
+        editdrag.current = true;
+      }
+    };
+    window.onpointermove = (e) => {
+      let x =
+        (e.clientX - vg.current.getBoundingClientRect().x) *
+          (cwidth.current / vg.current.clientWidth) +
+        vx.current;
+      let y =
+        (e.clientY - vg.current.getBoundingClientRect().y) *
+          (cheight.current / vg.current.clientHeight) +
+        vy.current;
+      let valw = Math.abs(x - pick.current[0]);
+      let valh = Math.abs(y - pick.current[1]);
+      let valx =
+        pick.current[0] + (x - pick.current[0] < 0 ? x - pick.current[0] : 0);
+      let valy =
+        pick.current[1] + (y - pick.current[1] < 0 ? y - pick.current[1] : 0);
+      if (shapes.current && !edit.current && shapebool.current) {
+       /*   if (polyelip.current[0]) {
+          polyelip.current[2] = `POLYGON:${valx + valw / 2} ${
+            valy + valh / 2
+          } ${valw / 2} ${valh / 2}`;
+          setRender((r) => r + 1);
+          let polynumber=0
+          let polyguy=``
+          const currentguy=Array.from(polyelip.current)[3].current
+          let increment= (currentguy.getTotalLength() /Number(polyelip.current[1]))
+
+            for (let index = 0; index < polyelip.current[1]+1; index++) {
+                if (index === 0) {
+              try{
+                  polyguy += `POLYGON:M${currentguy?.getPointAtLength(polynumber).x} ${currentguy?.getPointAtLength(polynumber).y}`;
+              }
+              catch(e){}
+                } else {
+                  try{
+                  polyguy += ` ${currentguy?.getPointAtLength(polynumber).x} ${
+                    currentguy?.getPointAtLength(polynumber).y
+                  }`;
+                }
+                catch(e){
+                  
+                }
+                }
+            polynumber += increment;
+              }
+        
+                vgpath.current.splice(
+                  vgpath.current.length - 1,
+                  1,
+                  polyguy
+                );
+              
+        }
+        */
+         let indexvalue=0;
+        if (shapedown.current) {
+           indexvalue = vgpath.current.length;
+          shapedown.current=false;
+          vgcolor.current.push(`white`);
+          straightcolor.current.push(`white`);
+        }
+        else{
+           indexvalue = vgpath.current.length - 1;
+        }
+        pick.current.splice(2, 1, valx);
+        pick.current.splice(3, 1, valy);
+        pick.current.splice(4, 1, valw);
+        pick.current.splice(5, 1, valh);
+        if (ellipse.current) {
+          vgpath.current.splice(
+            indexvalue,
+            1,
+            `ELLIPSE:${valx + valw / 2} ${valy + valh / 2} ${valw / 2} ${
+              valh / 2
+            }`
+          );
+        } else if (polyelip.current[0]) {
+          polyelip.current[2] = `POLYGON:${valx + valw / 2} ${
+            valy + valh / 2
+          } ${valw / 2} ${valh / 2}`;
+          setRender((r) => r + 1);
+          let polynumber = 0;
+          let polyguy = ``;
+          const currentguy = Array.from(polyelip.current)[3].current;
+          let increment =
+            currentguy.getTotalLength() / Number(polyelip.current[1]);
+          for (let index = 0; index < 2; index++) {
+            try {
+              polyguy += `POLYGON:M${
+                currentguy.getPointAtLength(polynumber).x
+              } ${currentguy?.getPointAtLength(polynumber).y}`;
+            } catch (e) {}
+
+            polynumber += increment;
+          }
+
+          for (let index = 0; index < polyelip.current[1] + 1; index++) {
+            if (index === 0) {
+              try {
+                polyguy += `POLYGON:M${
+                  currentguy.getPointAtLength(polynumber).x
+                } ${currentguy?.getPointAtLength(polynumber).y}`;
+              } catch (e) {}
+            } else {
+              try {
+                polyguy += ` ${currentguy.getPointAtLength(polynumber).x} ${
+                  currentguy?.getPointAtLength(polynumber).y
+                }`;
+              } catch (e) {}
+            }
+            polynumber += increment;
+          }
+
+          vgpath.current.splice(indexvalue, 1, polyguy);
+        } else if (rbox.current) {
+          vgpath.current.splice(
+            indexvalue,
+            1,
+            `RECT:${valx} ${valy} ${valw} ${valh}`
+          );
+        } else if (circle.current) {
+          pick.current.splice(4, 1, Math.max(valw, valh));
+          pick.current.splice(5, 1, Math.max(valw, valh));
+          vgpath.current.splice(
+            indexvalue,
+            1,
+            `CIRCLE:${valx + pick.current[5] / 2} ${
+              valy + pick.current[5] / 2
+            } ${pick.current[5] / 2}`
+          );
+        }
+        setRender((r) => r + 1);
+      }
+      if (edit.current) {
+        gendragorclick.current = false;
+        if (
+          drag.current &&
+          !highlight.current &&
+          editdrag.current &&
+          Object.keys(targetObject.current).length > 0
+        ) {
+          dragbool.current = false;
+
+          Object.keys(targetObject.current).map((a, i) => {
+            ///
+            let lo = [];
+            for (let index = 0; index < dragd.current[i].length; index++) {
+              if (index % 2 == 0) {
+                lo.push(
+                  draga.current[i][index] +
+                    (dragd.current[i][index] !== ""
+                      ? +dragd.current[i][index] - dragx.current + x
+                      : "")
+                );
+              } else {
+                lo.push(
+                  draga.current[i][index] +
+                    (dragd.current[i][index] !== ""
+                      ? +dragd.current[i][index] - dragy.current + y
+                      : "")
+                );
+              }
+            }
+
+            if (targetObject.current[a][0].localName == "path") {
+              targetObject.current[a][0].setAttribute(
+                "d",
+                lo
+                  .map((m) => m)
+                  .join(" ")
+                  .replace(/ (?=[A-L]|[N-Z])/g, "")
+              );
+              vgpath.current.splice(
+                       a,
+                       1,
+                  targetObject.current[a][0].getAttribute("d")
+              );
+            } else if (targetObject.current[a][0].localName == "rect") {
+              targetObject.current[a][0].setAttribute("x", lo.map((m) => m)[0]);
+              targetObject.current[a][0].setAttribute("y", lo.map((m) => m)[1]);
+                 vgpath.current.splice(
+                   a,
+                   1,
+                   `RECT:${targetObject.current[a][0].getAttribute(
+                     "x"
+                   )} ${targetObject.current[a][0].getAttribute(
+                     "y"
+                   )} ${targetObject.current[a][0].getAttribute(
+                     "width"
+                   )} ${targetObject.current[a][0].getAttribute("height")}`
+                 );
+            } else if (targetObject.current[a][0].localName == "circle") {
+              targetObject.current[a][0].setAttribute(
+                "cx",
+                lo.map((m) => m)[0]
+              );
+              targetObject.current[a][0].setAttribute(
+                "cy",
+                lo.map((m) => m)[1]
+              );
+                vgpath.current.splice(
+                       a,
+                       1,
+                       `CIRCLE:${targetObject.current[a][0].getAttribute(
+                         "cx"
+                       )} ${targetObject.current[a][0].getAttribute(
+                         "cy"
+                       )} ${targetObject.current[a][0].getAttribute(
+                         "r"
+                       )}`
+                     );
+            } else if (targetObject.current[a][0].localName == "ellipse") {
+              targetObject.current[a][0].setAttribute(
+                "cx",
+                lo.map((m) => m)[0]
+              );
+              targetObject.current[a][0].setAttribute(
+                "cy",
+                lo.map((m) => m)[1]
+              );
+              vgpath.current.splice(
+                a,
+                1,
+                `ELLIPSE:${targetObject.current[a][0].getAttribute(
+                  "cx"
+                )} ${targetObject.current[a][0].getAttribute(
+                  "cy"
+                )} ${targetObject.current[a][0].getAttribute(
+                  "rx"
+                )} ${targetObject.current[a][0].getAttribute("ry")}`
+              );
+              
+            } else if (targetObject.current[a][0].localName == "line") {
+              targetObject.current[a][0].setAttribute(
+                "x1",
+                lo.map((m) => m)[0]
+              );
+              targetObject.current[a][0].setAttribute(
+                "y1",
+                lo.map((m) => m)[1]
+              );
+              targetObject.current[a][0].setAttribute(
+                "x2",
+                lo.map((m) => m)[2]
+              );
+              targetObject.current[a][0].setAttribute(
+                "y2",
+                lo.map((m) => m)[3]
+              );
+            }
+          });
+          editdrag.current = true;
+          setRender((r) => r + 1);
+        } else {
+          if (highlight.current) {
+            pick.current.splice(2, 1, valx);
+            pick.current.splice(3, 1, valy);
+            pick.current.splice(4, 1, valw);
+            pick.current.splice(5, 1, valh);
+
+            Array.from(vg.current.children)
+              .filter((f) => !f.getAttribute("name")?.includes("art$"))
+              .map((p, i) => {
+                target.current = [];
+                let vx = pick.current[0];
+                let vy = pick.current[1];
+                let x1 = p.getBBox().x;
+                let y1 = p.getBBox().y;
+                let x2 = x1 + p.getBBox().width;
+                let y2 = y1 + p.getBBox().height;
+                /*
+                console.log(
+                  x ,x1 , x2 ,
+                y , y1,  y2,
+                p
+                );
+
+                 (x >= x1 && x <= x2 && y >= y1 && y <= y2) ||
+                    (valx >= x1 && valx <= x2 && valy >= y1 && valy <= y2)
+                */
+                if (
+                  (x1 >= valx && x1 <= x && y1 >= valy && y1 <= y) ||
+                  (x2 >= valx && x2 <= x && y2 >= valy && y2 <= y) ||
+                  (x1 >= valx && x1 <= x && y2 >= valy && y2 <= y) ||
+                  (x2 >= valx && x2 <= x && y1 >= valy && y1 <= y) ||
+                  (x >= x1 && x <= x2 && y >= y1 && y <= y2) ||
+                  (x >= x1 && x <= x2 && valy >= y1 && valy <= y2) ||
+                  (valx >= x1 && valx <= x2 && y >= y1 && y <= y2) ||
+                  (valx >= x1 && valx <= x2 && valy >= y1 && valy <= y2) ||
+                  p == e.target
+                ) {
+                  target.current.push(p);
+                  target.current.push(p.getBBox().x);
+                  target.current.push(p.getBBox().y);
+                  target.current.push(p.getBBox().width);
+                  target.current.push(p.getBBox().height);
+                  target.current.push(target.current[1] + target.current[3]);
+                  target.current.push(target.current[2] + target.current[4]);
+                  target.current.push(i);
+                  targetObject.current[i] = target.current;
+                }
+              });
+            setRender((r) => r + 1);
+          }
+        }
+      }
+    };
+    window.onpointerup = (e) => {
+            let dataX =
+              (e.clientX - vg.current.getBoundingClientRect().x) *
+                (cwidth.current / vg.current.clientWidth) +
+              vx.current;
+            let dataY =
+              (e.clientY - vg.current.getBoundingClientRect().y) *
+                (cheight.current / vg.current.clientHeight) +
+              vy.current;
+      drag.current = false;
+      pick.current = [0, 0, 0, 0];
+      highlight.current = false;
+      if (edit.current) {
+        if (gendragorclick.current) {
+          targetObject.current = {};
+          targetObject.current[hovercolor.current] = target.current;
+        }
+        if (editdrag.current) {
+          editdrag.current = false;
+
+          Object.keys(targetObject.current).map((e) => {
+            targetObject.current[e][1] =
+              targetObject.current[e][0].getBBox().x;
+            targetObject.current[e][2] =
+              targetObject.current[e][0].getBBox().y;
+            targetObject.current[e][3] =
+              targetObject.current[e][0].getBBox().width;
+            targetObject.current[e][4] =
+              targetObject.current[e][0].getBBox().height;
+            targetObject.current[e][5] =
+              targetObject.current[e][1] + targetObject.current[e][3];
+            targetObject.current[e][6] =
+              targetObject.current[e][2] + targetObject.current[e][4];
+          });
+
+          if (dragbool.current) {
+            targetObject.current = {};
+          }
+        }
+        setRender((r) => r + 1);
+      }
+      if (shapes.current) {
+        if (shapedown.current){
+          console.log("allowed");
+                      if (circle.current) {
+                        vgpath.current.push(`CIRCLE:${dataX} ${dataY} ${50}`);
+                        vgcolor.current.push(`white`);
+                        straightcolor.current.push(`white`);
+                      } else if (ellipse.current) {
+                        vgpath.current.push(
+                          `ELLIPSE:${dataX} ${dataY} ${100} ${50}`
+                        );
+                        vgcolor.current.push(`white`);
+                        straightcolor.current.push(`white`);
+                      } else if (rbox.current) {
+                        vgpath.current.push(
+                          `RECT:${dataX} ${dataY} ${100} ${100}`
+                        );
+                        vgcolor.current.push(`white`);
+                        straightcolor.current.push(`white`);
+                      }
+                      shapedown.current=false;
+        } 
+          shapebool.current = false;
+        setRender((r) => r + 1);
+      }
+    };
+    window.onpointerover = (e) => {
+      if (
+        !e.target.getAttribute("name")?.includes("art$") &&
+        e.target.localName != "html"
+      ) {
+        hovercolor.current = Array.from(vg.current.children)
+          .filter((e) => !e.getAttribute("name")?.includes("art$"))
+          .map((m, i) => {
+            if (e.target === m) {
+              return i;
+            }
+          })
+          .filter((e) => e !== undefined)[0];
+        edit.current && e.target.setAttribute("stroke", bBoxColor.current);
+        if (
+          Array.from(e.target.attributes)
+            .map((m) => m.name)
+            .filter((f) => f === "fill")[0] === "fill"
+        ) {
+        } else {
+          edit.current && e.target.classList.add("fill");
+        }
+        edit.current &&
+          e.target.setAttribute("stroke-width", thick.current + 2);
+      }
+    
+    };
+    window.onwheel = (e) => {
+      let x =
+        (e.clientX - vg.current.getBoundingClientRect().x) *
+          (cwidth.current / vg.current.clientWidth) +
+        vx.current;
+      let y =
+        (e.clientY - vg.current.getBoundingClientRect().y) *
+          (cheight.current / vg.current.clientHeight) +
+        vy.current;
+      if (pen.current) {
+        vgpath.current.splice(
+          vgpath.current.length - 1,
+          1,
+          downconst.current + `L${x} ${y}`
+        );
+        movepen.current = `${x} ${y}`;
+      }
+      if (
+        pen.current &&
+        pencirclearr.current
+          .map((e) => {
+            if (e.includes(`${x}`) || e.includes(`${y}`)) {
+              alignedline.current.push(`${x} ${y} ${e}`);
+              return e.includes(`${x}`) || e.includes(`${y}`);
+            }
+          })
+          .filter((e) => e == true)[0]
+      ) {
+      } else {
+        alignedline.current = [];
+        vgcolor.current.splice(
+          vgcolor.current.length - 1,
+          1,
+          straightcolor.current[vgcolor.current.length - 1]
+        );
+      }
+      vx.current = vx.current + e.deltaX;
+      vy.current = vy.current + e.deltaY;
+      setRender((r) => r + 1);
+    };
+
+    window.onpointerout = (e) => {
+      if (
+        !e.target.getAttribute("name")?.includes("art$") &&
+        e.target.localName != "html"
+      ) {
+        //&& e.target !== target.current[0]
+        edit.current &&
+          e.target.setAttribute("stroke", vgcolor.current[hovercolor.current]);
+        if (
+          Array.from(e.target.attributes)
+            .map((m) => m.name)
+            .filter((f) => f === "fill")[0] === "fill"
+        ) {
+        } else {
+          e.target.classList.remove("fill");
+        }
+        edit.current && e.target.setAttribute("stroke-width", thick.current);
+        hovercolor.current = -1;
+      }
+    };
+    //https://www.reddit.com/r/bestsquirt/comments/1880sn2/sexy_ebony_baddie_queen_tahshaar_makes_a_big_wet/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+  }, []);
+
+  return <></>;
+}
+export default WindowFx;

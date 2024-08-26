@@ -1,0 +1,41 @@
+import { useContext, useEffect, useRef, useState } from "react";
+import { Context } from "./Draw";
+function Dimension({x1,x2,y1,y2}) {
+  let context = useContext(Context);
+  let td=useRef(null)
+  let tf = useRef(null);
+  let bBoxColor = context.bBoxColor;
+  let circlerad = context.circlerad;
+  let cwidth = context.cwidth
+  let cheight = context.cheight;
+    let vx = context.vx;
+  let vy=context.vy
+  let ctx=context.ctx
+  let [u, uu] = useState([
+    Math.abs(x1) === Infinity ? null : x2 - x1,
+    Math.abs(y1) === Infinity ? null : y2 - y1,
+  ]);
+  useEffect(() => {
+    ctx.current.font = getComputedStyle(td.current).font;
+    ctx.current.strokeText(`${Math.round(x2 - 2 - (x1 + 2))} x ${Math.round(
+              y2 - 2 - (y1 + 2)
+            )}`,0,0);
+     ctx.current.stroke();
+     ctx.current.canvas.style.display=""
+
+    tf.current.setAttribute(
+      "width",
+      ctx.current.measureText(
+        `${Math.round(x2 - 2 - (x1 + 2))} x ${Math.round(y2 - 2 - (y1 + 2))}`
+      ).width
+    );
+        tf.current.setAttribute(
+          "height",
+          ctx.current.measureText(
+            `${Math.round(x2 - 2 - (x1 + 2))} x ${Math.round(
+              y2 - 2 - (y1 + 2)
+            )}`
+          ).hangingBaseline
+        );
+    
+  }, [vx.current, vy.current, cwidth.current, cheight.current]);

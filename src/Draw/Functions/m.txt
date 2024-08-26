@@ -1,0 +1,107 @@
+export let mousemove = (e, context, ref) => {
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let cwidth=context.cwidth
+  let cheight=context.cheight
+  let mooveboolean = context.mooveboolean;
+  let countm=context.countm;
+  if (mooveboolean.current) {
+    let x =
+      (e.clientX - ref.current.getBoundingClientRect().x) *
+      (cwidth.current / ref.current.clientWidth);
+    let y = 
+      (e.clientY - ref.current.getBoundingClientRect().y) *
+        (cheight.current / ref.current.clientHeight)
+    ;
+    if (vgpathxy.current[`pathmouse`] !== undefined) {
+          let xold =
+            vgpathxy.current[`pathmouse`][
+              vgpathxy.current[`pathmouse`].length - 1
+            ].split(" ")[0];
+          let yold =
+            vgpathxy.current[`pathmouse`][
+              vgpathxy.current[`pathmouse`].length - 1
+            ].split(" ")[1];
+      if (countm.current%2!==0) {
+        vgpathxy.current[`pathmouse`].pop();
+        vgpathxy.current[`pathmouse`].push(
+          `C${xold} ${yold} ${x + (x - xold) / 2} ${y + (y - yold) / 2} ${x} ${y}`
+        );
+      }
+      else{
+              vgpathxy.current[`pathmouse`].push(`${x} ${y}`);
+      }
+      vgpath.current.splice(
+        vgpath.current.length - 1,
+        1,
+        vgpath.current[vgpath.current.length - 1] + ` ${x} ${y}`
+      );
+      countm.current = countm.current + 1;
+    }
+  }
+  setRender((r) => r + 1);
+};
+export let down = (e, context, ref) => {
+    console.log("down");
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let vgcolor = context.vgcolor;
+    let cwidth = context.cwidth;
+    let cheight = context.cheight;
+  let mooveboolean = context.mooveboolean;
+  let x =
+    (e.clientX - ref.current.getBoundingClientRect().x) *
+    (cwidth.current / ref.current.clientWidth);
+  let y =
+    (e.clientY - ref.current.getBoundingClientRect().y) *
+    (cheight.current / ref.current.clientHeight);
+  if (vgpathxy.current[`pathmouse`] === undefined) {
+    vgpathxy.current[`pathmouse`] = [`M${x} ${y} ${x} ${y}`];
+    vgpath.current.push(`M${x} ${y} ${x} ${y}`);
+    vgcolor.current.push(`white`);
+  }
+  mooveboolean.current = true;
+  setRender((r) => r + 1);
+};
+export let up = (e, context) => {
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let mooveboolean = context.mooveboolean;
+  let vgpath=context.vgpath;
+  let countm = context.countm
+  console.log("up");
+  console.log(vgpath.current[vgpath.current.length-1].split(" ").length);
+    1==2&&vgpath.current.splice(
+      vgpath.current.length - 1,
+      1,
+      vgpathxy.current[`pathmouse`].join(" ")
+    );
+  setRender((r) => r + 1);
+  vgpathxy.current = {};
+  mooveboolean.current = false;
+  countm.current=0;
+};
+
+     dragd.current.push(
+              targetObject.current[e][0]
+                .getAttribute("d")
+                .replace(/ [A-Z]|[a-z]/g, /[A-Z]|[a-z]/g)
+                .replace(/[A-Z]|[a-z]/g, " $&")
+                .replace(/(?<=[Hh])((\.*|-)\d)*/g, "$& 0 ")
+                .trim()
+                .replace(/(?<=[Vv])/g, "0 ")
+                .replace(/[A-Z]|[a-z]/g, "")
+                .split(" ")
+            );
+            draga.current.push(
+              targetObject.current[e][0]
+                .getAttribute("d")
+                .replace(/ [A-Z]|[a-z]/g, /[A-Z]|[a-z]/g)
+                .replace(/[A-Z]|[a-z]/g, " $&")
+                .trim()
+                .replace(/(\.*|-)\d/g, "")
+                .replace(/[VHvh]/g, "L ")
+                .split(" ")
+            );

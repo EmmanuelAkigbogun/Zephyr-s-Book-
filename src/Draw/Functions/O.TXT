@@ -1,0 +1,422 @@
+export let mousemove = (e, context, ref) => {
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let cwidth=context.cwidth
+  let cheight=context.cheight
+  let mooveboolean = context.mooveboolean;
+  if (mooveboolean.current) {
+    let x =
+      parseInt((e.clientX - ref.current.getBoundingClientRect().x) *
+      (cwidth.current / ref.current.clientWidth));
+    let y = parseInt(
+      (e.clientY - ref.current.getBoundingClientRect().y) *
+        (cheight.current / ref.current.clientHeight)
+    );
+    if (vgpathxy.current[`pathmouse`] !== undefined) {
+      vgpathxy.current[`pathmouse`].push(`${x} ${y}`);
+      vgpath.current.splice(
+        vgpath.current.length - 1,
+        1,
+        vgpath.current[vgpath.current.length - 1] + ` ${x} ${y}`
+      );
+    }
+  }
+  setRender((r) => r + 1);
+};
+export let down = (e, context, ref) => {
+    console.log("down");
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let vgcolor = context.vgcolor;
+    let cwidth = context.cwidth;
+    let cheight = context.cheight;
+  let mooveboolean = context.mooveboolean;
+  let x =
+    parseInt((e.clientX - ref.current.getBoundingClientRect().x) *
+    (cwidth.current / ref.current.clientWidth));
+  let y =
+    parseInt((e.clientY - ref.current.getBoundingClientRect().y) *
+    (cheight.current / ref.current.clientHeight));
+  if (vgpathxy.current[`pathmouse`] === undefined) {
+    vgpathxy.current[`pathmouse`] = [`M${x} ${y} ${x} ${y}`];
+    vgpath.current.push(`M${x} ${y} ${x} ${y}`);
+    vgcolor.current.push(`white`);
+  }
+  mooveboolean.current = true;
+  setRender((r) => r + 1);
+};
+export let up = (e, context) => {
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let mooveboolean = context.mooveboolean;
+  console.log("up");
+  setRender((r) => r + 1);
+  vgpathxy.current = {};
+  mooveboolean.current = false;
+};
+
+
+
+import { rota } from "./BfrSetPathV";
+
+export let down = (e, context, ref) => {
+  console.log("down");
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let vgcolor = context.vgcolor;
+  let cwidth = context.cwidth;
+  let cheight = context.cheight;
+  let mooveboolean = context.mooveboolean;
+  let straightcolor = context.straightcolor;
+  let pen = context.pen;
+  let pencirclearr = context.pencirclearr;
+  let movepen = context.movepen;
+  let downconst = context.downconst;
+  let vx = context.vx;
+  let vy = context.vy;
+  let alignedline = context.alignedline;
+  let penpause = context.penpause;
+  let penendindex = context.penendindex;
+  let x =
+    (e.clientX - ref.current.getBoundingClientRect().x) *
+      (cwidth.current / ref.current.clientWidth) +
+    vx.current;
+  let y =
+    (e.clientY - ref.current.getBoundingClientRect().y) *
+      (cheight.current / ref.current.clientHeight) +
+    vy.current;
+  x = x.toFixed(2);
+  y = y.toFixed(2);
+  if (vgpathxy.current[`pathmouse`] === undefined) {
+    vgpathxy.current[`pathmouse`] = [`M${x} ${y}L${x} ${y}`];
+    vgpath.current.push(`M${x} ${y} ${x} ${y}`);
+    if (pen.current) {
+      downconst.current =[`M${x} ${y}`];
+    }
+    vgcolor.current.push(`white`);
+    straightcolor.current.push("white");
+  } else {
+    if (pen.current) {
+      if (e.target.getAttribute("name") === "circledbcart$") {
+        x = e.target.getAttribute("cx");
+        y = e.target.getAttribute("cy");
+      } else {
+        x = movepen.current?.split(" ")[0];
+        y = movepen.current?.split(" ")[1];
+      }
+      if (
+        pencirclearr.current.includes(`${x} ${y}`) &&
+        pencirclearr.current[pencirclearr.current.length - 2] !== `${x} ${y}` &&
+        pencirclearr.current[pencirclearr.current.length - 1] !== `${x} ${y}`
+      ) {
+        if (penpause.current) {
+          penpause.current = false;
+          downconst.current.push(`M${x} ${y}`);
+        }
+        else{
+          
+        }
+      } else {
+        if (penpause.current) {
+                downconst.current.push(`M${x} ${y}`);
+          penpause.current = false;
+        } else {
+                downconst.current.push(`L${x} ${y}`);
+        }
+      }
+    }
+  }
+  if (pen.current) {
+    if (
+      pencirclearr.current.includes(`${x} ${y}`) &&
+      pencirclearr.current[pencirclearr.current.length - 2] !== `${x} ${y}` &&
+      pencirclearr.current[pencirclearr.current.length - 1] !== `${x} ${y}`
+    ) {
+     penpause.current=true;
+     console.log(pencirclearr.current,vgpathxy.current,vgpath.current[vgpath.current.length-1],downconst.current);
+      ///*
+      // return to single path
+      //vgpathxy.current = {};
+      //pencirclearr.current = [];
+      //movepen.current = `L `;
+      //*/
+      let downarray = [];
+      let downbool=false
+      if (penendindex.current!==-1) {
+        let count=0
+        downconst.current.map((p,index)=>{
+          if (count===penendindex.current||downbool) {
+              if (p.includes("M")) {
+                downbool = true;
+              }
+              else{
+            downarray.push(p);
+            downarray.push(p.replace(/[A-Z]|[a-z]/g,"M"))  
+            }
+          }
+          else{
+            downarray.push(p)
+          }
+         
+          if (p!=="Z") {
+            count++
+          }
+        })
+      }
+      if (!downbool) { 
+      downconst.current=downarray
+      pencirclearr.current = downarray.map((r) =>
+        r.replace(/[A-Z]|[a-z]/g, "")
+      ).filter(f=>f!=="");
+     }
+      downconst.current.push(`Z`);
+    } else {
+      pencirclearr.current.push(`${x} ${y}`);
+    }
+    vgpath.current.splice(vgpath.current.length - 1, 1, downconst.current.join(""));
+  }
+  mooveboolean.current = true;
+  alignedline.current = [];
+  setRender((r) => r + 1);
+};
+export let mousemove = (e, context, ref) => {
+  let vgpath = context.vgpath;
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let cwidth = context.cwidth;
+  let cheight = context.cheight;
+  let mooveboolean = context.mooveboolean;
+  let vertical = context.vertical.current;
+  let horizontal = context.horizontal.current;
+  let line = context.line.current;
+  let straightcolor = context.straightcolor;
+  let vgcolor = context.vgcolor;
+  let vg = context.vg;
+  let pen = context.pen.current;
+  let movepen = context.movepen;
+  let pencirclearr = context.pencirclearr;
+  let downconst = context.downconst;
+  let vx = context.vx;
+  let vy = context.vy;
+  let alignedline = context.alignedline;
+  let anglevalue = context.anglevalue;
+  let penpause = context.penpause;
+    let penendindex = context.penendindex;
+  anglevalue.current=``;
+  if (mooveboolean.current) {
+    if (vgpathxy.current[`pathmouse`] !== undefined) {
+      let x =
+        (e.clientX - ref.current.getBoundingClientRect().x) *
+          (cwidth.current / ref.current.clientWidth) +
+        vx.current;
+      let y =
+        (e.clientY - ref.current.getBoundingClientRect().y) *
+          (cheight.current / ref.current.clientHeight) +
+        vy.current;
+      penendindex.current=-1;
+      x = x.toFixed(2);
+      y = y.toFixed(2);
+      let end = vg.current.children[
+        vgcolor.current.length - 1
+      ].getPointAtLength(
+        vg.current.children[vgcolor.current.length - 1].getTotalLength()
+      );
+      let begin =
+        vg.current.children[vgcolor.current.length - 1].getPointAtLength(0);
+                 vgpathxy.current[`pathmouse`].splice(1,   vgpathxy.current[`pathmouse`].length)
+                  vgpathxy.current[`pathmouse`].push(`L${x} ${y}`);
+        
+      !horizontal &&
+        !vertical &&
+        !line &&
+        !pen &&
+        vgpath.current.splice(
+          vgpath.current.length - 1,
+          1,
+          vgpath.current[vgpath.current.length - 1] + `L${x} ${y}`
+        );
+      vertical &&
+        vgpath.current.splice(
+          vgpath.current.length - 1,
+          1,
+          vgpath.current[vgpath.current.length - 1].replace(
+            /[V][-|0-9|.]*/g,
+            ""
+          ) + `V${y}`
+        );
+      horizontal &&
+        vgpath.current.splice(
+          vgpath.current.length - 1,
+          1,
+          vgpath.current[vgpath.current.length - 1].replace(
+            /[H][-|0-9|.]*/g,
+            ""
+          ) + `H${x}`
+        );
+      line &&
+        vgpath.current.splice(
+          vgpath.current.length - 1,
+          1,
+          vgpath.current[vgpath.current.length - 1].replace(
+            /[L][-|0-9|.]* [0-9|.]*/g,
+            ""
+          ) + `L${x} ${y}`
+        );
+      if (pen) {
+        if (penpause.current) {
+        } else {
+          vgpath.current.splice(
+            vgpath.current.length - 1,
+            1,
+            downconst.current.join("") + `L${x} ${y}`
+          );
+        }
+        movepen.current = `${x} ${y}`;
+      }
+      alignedline.current = [];
+      let newx = 0;
+      let newy = 0;
+      if (line && (begin.x === end.x || begin.y === end.y)) {
+        vgcolor.current.splice(vgcolor.current.length - 1, 1, "green");
+      } else if (
+        pen &&
+        pencirclearr.current
+          .map((e,i) => {
+            const digital = 3;
+            let evnum = e.split(" ");
+            let evamax = evnum.map((m) => +m + digital);
+            let evamin = evnum.map((n) => +n - digital);
+            if (
+              (+x <= evamax[0] && +x >= evamin[0]) ||
+              (+y <= evamax[1] && +y >= evamin[1])
+            ) {
+              if (y - evnum[1] <= digital && y - evnum[1] >= -digital) {
+                newy = evnum[1];
+              }
+              if (x - evnum[0] <= digital && x - evnum[0] >= -digital) {
+                newx = evnum[0];
+              }
+              if (newx == 0) {
+                newx = x;
+              }
+              if (newy == 0) {
+                newy = y;
+              }
+              alignedline.current.push(`${newx} ${newy} ${e}`);
+              if (newx===evnum[0]&&newy===evnum[1]) {
+                  penendindex.current=i
+              }
+
+              return (
+                (+x <= evamax[0] && +x >= evamin[0]) ||
+                (+y <= evamax[1] && +y >= evamin[1])
+              );
+            }
+          })
+          .filter((e) => e == true)[0]
+      ) {
+        if (penpause.current) {
+        } else {
+          vgpath.current.splice(
+            vgpath.current.length - 1,
+            1,
+            downconst.current.join("") + `L${newx} ${newy}`
+          );
+        }
+        movepen.current = `${newx} ${newy}`;
+      } else {
+        alignedline.current = [];
+        vgcolor.current.splice(
+          vgcolor.current.length - 1,
+          1,
+          straightcolor.current[vgcolor.current.length - 1]
+        );
+      }
+      if (pencirclearr.current[pencirclearr.current.length - 1] !== undefined) {
+        let cc =
+          pencirclearr.current[pencirclearr.current.length - 1].split(" ");
+        let xval = movepen.current.split(" ");
+        let r2 = 0;
+        if (
+          pencirclearr.current[pencirclearr.current.length - 2] !== undefined
+        ) {
+          let cval =
+            pencirclearr.current[pencirclearr.current.length - 2].split(" ");
+          r2 = rota(cc[0], cc[1], cval[0], cval[1]);
+        }
+        let r1 = rota(cc[0], cc[1], xval[0], xval[1]);
+      //  console.log(r1,r2);
+      
+        //console.log(r1, r2);
+        //let r3 = r1 - r2;
+        //if (r3 >= 180) {
+          //r3 = 360 - r3;
+
+
+        //}
+
+        
+/*
+      
+        r3 = r3.toFixed(2);
+        r1 = r1.toFixed(2);
+        let llength = `${(
+          ((xval[0] - cc[0]) ** 2 + (xval[1] - cc[1]) ** 2) **
+          (1 / 2)
+        ).toFixed(2)}`;
+            anglevalue.current =
+              "< " + r3 + "deg" + " | " + llength //+ " <x " + Math.abs(r1)+"deg";
+             
+              */
+
+        /*
+        console.log(
+         "<"+r3,
+          "_ "+llength,
+          Math.abs(r1)
+          //,r1,r2
+
+          //,r2,r1+r2
+        );
+        */
+    
+      }
+    }
+  }
+  setRender((r) => r + 1);
+};
+export let up = (e, context) => {
+  let vgpathxy = context.vgpathxy;
+  let setRender = context.setRender;
+  let mooveboolean = context.mooveboolean;
+  let vgpath = context.vgpath;
+  let vgcolor = context.vgcolor;
+  let straightcolor = context.straightcolor;
+  let pen = context.pen;
+  if (!pen.current) {
+    vgpathxy.current[`pathmouse`].length > 1 &&
+      vgpath.current.splice(
+        vgpath.current.length - 1,
+        1,
+        `M` +
+          vgpath.current[vgpath.current.length - 1].replace(
+            /[M][-|0-9|.]* [-|0-9|.]* /g,
+            ""
+          )
+      );
+  }
+  vgcolor.current.splice(
+    vgcolor.current.length - 1,
+    1,
+    straightcolor.current[vgcolor.current.length - 1]
+  );
+  console.log("up");
+  setRender((r) => r + 1);
+  if (!pen.current) {
+    vgpathxy.current = {};
+    mooveboolean.current = false;
+  }
+};
